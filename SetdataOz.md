@@ -70,9 +70,6 @@ agancy_stats <- yadirGetReport(ReportType = "CUSTOM_REPORT",
 
 agancy_stats_work <- agancy_stats[grepl('tver', agancy_stats$CampaignName), ]
 
-agancy_stats_work$CampGroupKey <- paste(agancy_stats_work$CampaignId, agancy_stats_work$AdGroupId, agancy_stats_work$CriterionId, sep = "-")
-ozon_work_data_set$CampGroupKey <- paste(ozon_work_data_set$CampaignID, ozon_work_data_set$Group_ID, ozon_work_data_set$CriterionId, sep = "-")
-
 #Группировка
 agancy_stats_work <- agancy_stats_work %>%
   group_by(CampGroupKey, CampaignName, AdGroupName, Criterion, CriterionId) %>% # группируем таблицу по полю 
@@ -87,11 +84,6 @@ ozon_work_data_set <- ozon_work_data_set %>%
   ) %>% # считаем какое к-во 
   arrange(-leads)
 
-totalData_work <- merge(agancy_stats_work, ozon_work_data_set, by.x = "CampGroupKey", by.y = "CampGroupKey", all.x = TRUE, all.y = T)
-totalData_work$CPL <- totalData_work$Cost / totalData_work$leads
-
-
-r.for.rga <- authorize(client.id = "906459915473-4vechj2uecoq79i8ar4o8la1tu963pvm.apps.googleusercontent.com", client.secret = "NTdES2UJL7YSVf6rsCiQtQbE")
 # Core API
 ga_data <- RGA::get_ga(profileId     = "ga:184044283",
                        start.date    = date_start,
@@ -128,15 +120,3 @@ ga_data <- separate(data = ga_data,
 ga_data <- ga_data[ , -c(3, 5)]
 
 ga_data_work <- ga_data[grepl('kladovschik', ga_data$campaign), ]
-
-ga_data_work$CampGroupKey <- paste(ga_data_work$campaign_ID, ga_data_work$Group_id, ga_data_work$Criterionid, sep = "-")
-ga_data_work <- ga_data_work %>%
-  group_by(CampGroupKey, campaign_ID, Group_id, Criterionid) %>% # группируем таблицу по полю 
-  summarise(users = sum(users),
-            goal1Completions = sum(goal1Completions)
-  ) %>% arrange(-goal1Completions)
-
-
-totalData_work <- merge(totalData_work, ga_data_work, by.x = "CampGroupKey", by.y = "CampGroupKey", all.x = TRUE, all.y = T)
-totalData_work <- totalData_work[ , -c(5, 9, 10, 11, 12, 15, 16, 17)]
-totalData_work <- subset(totalData_work, Impressions >= 1)
